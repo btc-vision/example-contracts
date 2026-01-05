@@ -19,6 +19,15 @@
         "nft": {
             "outFile": "build/MyNFT.wasm",
             "use": ["abort=src/nft/index/abort"]
+        },
+        "registry": {
+            "outFile": "build/PackageRegistry.wasm",
+            "use": ["abort=src/registry/index/abort"]
+        },
+        "btc-resolver": {
+			"initialMemory": 4,
+            "outFile": "build/Resolver.wasm",
+            "use": ["abort=src/btc-resolver/index/abort"]
         }
     },
     "options": {

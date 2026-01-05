@@ -8,11 +8,20 @@
         "build:stablecoin": "asc src/stablecoin/index.ts --target stablecoin --measure --uncheckedBehavior never",
         "build:peggedcoin": "asc src/pegged-token/index.ts --target peggedcoin --measure --uncheckedBehavior never",
         "build:oraclecoin": "asc src/multi-oracle-stablecoin/index.ts --target oraclecoin --measure --uncheckedBehavior never",
-        "build:nft": "asc src/nft/index.ts --target nft --measure --uncheckedBehavior never"
+        "build:nft": "asc src/nft/index.ts --target nft --measure --uncheckedBehavior never",
+        "build:registry": "asc src/registry/index.ts --target registry --measure --uncheckedBehavior never",
+        "build:btc-resolver": "asc src/btc-resolver/index.ts --target btc-resolver --measure --uncheckedBehavior never",
+        "test": "asp --config as-pect.config.js --verbose --no-logo",
+        "test:ci": "asp --config as-pect.config.js --summary --no-logo"
     },
     "author": "BlobMaster41",
     "license": "MIT",
     "devDependencies": {
+        "@btc-vision/as-covers-assembly": "^0.4.4",
+        "@btc-vision/as-covers-transform": "^0.4.4",
+        "@btc-vision/as-pect-assembly": "^8.2.0",
+        "@btc-vision/as-pect-cli": "^8.2.0",
+        "@btc-vision/as-pect-transform": "^8.2.0",
         "@types/node": "^25.0.1",
         "assemblyscript": "^0.28.9",
         "prettier": "^3.7.4"

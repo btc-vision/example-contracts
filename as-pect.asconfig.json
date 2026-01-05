@@ -1,0 +1,36 @@
+{
+    "targets": {
+        "coverage": {
+            "lib": [
+                "./node_modules/@btc-vision/as-covers-assembly/index.ts"
+            ],
+            "transform": [
+                "@btc-vision/opnet-transform",
+                "@btc-vision/as-covers-transform",
+                "@btc-vision/as-pect-transform"
+            ]
+        },
+        "noCoverage": {
+            "transform": [
+                "@btc-vision/opnet-transform",
+                "@btc-vision/as-pect-transform"
+            ]
+        }
+    },
+    "options": {
+        "outFile": "output.wasm",
+        "textFile": "output.wat",
+        "debug": true,
+        "bindings": "raw",
+        "exportStart": "_start",
+        "exportMemory": true,
+        "exportRuntime": true,
+        "exportTable": true,
+        "use": [
+            "RTRACE=1"
+        ]
+    },
+    "entries": [
+        "./node_modules/@btc-vision/as-pect-assembly/assembly/index.ts"
+    ]
+}
