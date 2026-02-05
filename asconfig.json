@@ -43,8 +43,7 @@
             "bulk-memory",
             "simd",
             "reference-types",
-            "multi-value",
-            "closures"
+            "multi-value"
         ],
         "runtime": "stub",
         "memoryBase": 0,
