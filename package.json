@@ -41,16 +41,15 @@
     "homepage": "https://opnet.org",
     "type": "module",
     "peerDependencies": {
-        "@btc-vision/assemblyscript": "^0.29.2",
-        "@btc-vision/btc-runtime": "^1.11.0-beta.1"
+        "@btc-vision/assemblyscript": "^0.29.2"
     },
     "dependencies": {
         "@assemblyscript/loader": "^0.28.9",
         "@btc-vision/as-bignum": "^0.1.2",
         "@btc-vision/assemblyscript": "^0.29.2",
         "@btc-vision/bitcoin": "^6.5.6",
-        "@btc-vision/btc-runtime": "^1.11.0-beta.1",
-        "@btc-vision/opnet-transform": "^1.0.0",
+        "@btc-vision/btc-runtime": "^1.11.0-rc.0",
+        "@btc-vision/opnet-transform": "^1.0.2",
         "@eslint/js": "^9.39.2",
         "gulplog": "^2.2.0",
         "ts-node": "^10.9.2",

@@ -31,6 +31,13 @@ export class MyToken extends OP20 {
         // this._mint(Blockchain.tx.origin, maxSupply);
     }
 
+    // "onUpdate" This method will run when the contract is UPDATED (REDEPLOYED).
+    public override onUpdate(_calldata: Calldata): void {
+        super.onUpdate(_calldata);
+
+        // Add your logic here. If you want to REDEPLOY YOUR CONTRACT, this will be called as the "onDeployment of the new contract".
+    }
+
     @method(
         {
             name: 'address',
@@ -72,8 +79,11 @@ export class MyToken extends OP20 {
 
         for (let i: i32 = 0; i < addresses.length; i++) {
             const address = addresses[i];
-            const amount = addressAndAmount.get(address);
+            if (!address) {
+                throw new Error('Invalid address in airdrop list');
+            }
 
+            const amount = addressAndAmount.get(address);
             const currentBalance: u256 = this.balanceOfMap.get(address);
 
             if (currentBalance) {
