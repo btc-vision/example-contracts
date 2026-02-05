@@ -42,6 +42,7 @@ export class MyToken extends OP20 {
         },
     )
     @emit('Minted')
+    @returns()
     public mint(calldata: Calldata): BytesWriter {
         this.onlyDeployer(Blockchain.tx.sender);
 
@@ -60,6 +61,7 @@ export class MyToken extends OP20 {
         type: ABIDataTypes.ADDRESS_UINT256_TUPLE,
     })
     @emit('Minted')
+    @returns()
     public airdrop(calldata: Calldata): BytesWriter {
         this.onlyDeployer(Blockchain.tx.sender);
 
