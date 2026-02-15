@@ -47,7 +47,7 @@
         "@btc-vision/bitcoin": "^6.5.6",
         "@btc-vision/btc-runtime": "^1.11.0-rc.6",
         "@btc-vision/opnet-transform": "^1.1.0",
-        "@eslint/js": "^9.39.2",
+        "@eslint/js": "^10.0.1",
         "eslint": "^9.39.2",
         "gulplog": "^2.2.0",
         "ts-node": "^10.9.2",
