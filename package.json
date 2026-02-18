@@ -45,13 +45,13 @@
         "@btc-vision/as-bignum": "^0.1.2",
         "@btc-vision/assemblyscript": "^0.29.2",
         "@btc-vision/bitcoin": "^6.5.6",
-        "@btc-vision/btc-runtime": "^1.11.0-rc.6",
-        "@btc-vision/opnet-transform": "^1.1.0",
-        "@eslint/js": "^9.39.2",
-        "eslint": "^9.39.2",
+        "@btc-vision/btc-runtime": "^1.11.0-rc.7",
+        "@btc-vision/opnet-transform": "^1.2.0",
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.0.0",
         "gulplog": "^2.2.0",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.55.0"
+        "typescript-eslint": "^8.56.0"
     }
 }
