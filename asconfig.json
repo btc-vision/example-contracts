@@ -8,6 +8,10 @@
             "outFile": "build/MyStableCoin.wasm",
             "use": ["abort=src/stablecoin/index/abort"]
         },
+        "mint": {
+            "outFile": "build/PillCounter.wasm",
+            "use": ["abort=src/free-mint/index/abort"]
+        },
         "peggedcoin": {
             "outFile": "build/MyPeggedCoin.wasm",
             "use": ["abort=src/pegged-token/index/abort"]
