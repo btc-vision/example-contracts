@@ -9,7 +9,7 @@
         "build:peggedcoin": "asc src/pegged-token/index.ts --target peggedcoin --measure --uncheckedBehavior never",
         "build:oraclecoin": "asc src/multi-oracle-stablecoin/index.ts --target oraclecoin --measure --uncheckedBehavior never",
         "build:nft": "asc src/nft/index.ts --target nft --measure --uncheckedBehavior never",
-        "build:mint": "asc src/free-mint/index.ts --target nft --measure --uncheckedBehavior never",
+        "build:mint": "asc src/free-mint/index.ts --target mint --measure --uncheckedBehavior never",
         "build:registry": "asc src/registry/index.ts --target registry --measure --uncheckedBehavior never",
         "build:btc-resolver": "asc src/btc-resolver/index.ts --target btc-resolver --measure --uncheckedBehavior never",
         "test": "asp --config as-pect.config.js --verbose --no-logo",
