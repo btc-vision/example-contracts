@@ -9,6 +9,7 @@
         "build:peggedcoin": "asc src/pegged-token/index.ts --target peggedcoin --measure --uncheckedBehavior never",
         "build:oraclecoin": "asc src/multi-oracle-stablecoin/index.ts --target oraclecoin --measure --uncheckedBehavior never",
         "build:nft": "asc src/nft/index.ts --target nft --measure --uncheckedBehavior never",
+        "build:mint": "asc src/free-mint/index.ts --target nft --measure --uncheckedBehavior never",
         "build:registry": "asc src/registry/index.ts --target registry --measure --uncheckedBehavior never",
         "build:btc-resolver": "asc src/btc-resolver/index.ts --target btc-resolver --measure --uncheckedBehavior never",
         "test": "asp --config as-pect.config.js --verbose --no-logo",
@@ -22,7 +23,7 @@
         "@btc-vision/as-pect-assembly": "^8.2.0",
         "@btc-vision/as-pect-cli": "^8.2.0",
         "@btc-vision/as-pect-transform": "^8.2.0",
-        "@types/node": "^25.3.5",
+        "@types/node": "^25.5.0",
         "prettier": "^3.8.1"
     },
     "keywords": [
@@ -41,17 +42,17 @@
     "homepage": "https://opnet.org",
     "type": "module",
     "dependencies": {
-        "@btc-vision/as-bignum": "^0.1.2",
+        "@btc-vision/as-bignum": "^1.0.0",
         "@btc-vision/as-loader": "^0.0.0",
         "@btc-vision/assemblyscript": "^0.29.3",
         "@btc-vision/bitcoin": "^7.0.0",
-        "@btc-vision/btc-runtime": "^1.11.0-rc.9",
-        "@btc-vision/opnet-transform": "^1.2.0",
+        "@btc-vision/btc-runtime": "^1.11.0",
+        "@btc-vision/opnet-transform": "^1.2.2",
         "@eslint/js": "^10.0.1",
         "eslint": "^10.0.3",
         "gulplog": "^2.2.0",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.56.1"
+        "typescript-eslint": "^8.57.1"
     }
 }
