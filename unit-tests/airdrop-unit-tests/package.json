@@ -1,0 +1,18 @@
+{
+    "name": "airdrop-unit-tests",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "test": "npx tsx tests/airdrop.test.ts"
+    },
+    "dependencies": {
+        "@btc-vision/unit-test-framework": "latest",
+        "@btc-vision/transaction": "latest",
+        "@btc-vision/bitcoin": "latest",
+        "@noble/curves": "^1.8.1"
+    },
+    "devDependencies": {
+        "tsx": "^4.19.0",
+        "typescript": "^5.7.0"
+    }
+}
