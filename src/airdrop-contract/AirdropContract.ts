@@ -99,8 +99,12 @@ export class AirdropContract extends OP_NET {
 
         const publicKey = Address.fromUint8Array(Blockchain.tx.origin.tweakedPublicKey);
         const redeemed: bool = this.holders.has(publicKey);
-
         if (redeemed) {
+            throw new Revert('Airdrop: redeemed');
+        }
+
+        const redeemedValue = this.holders.get(publicKey);
+        if (redeemedValue === u256.One) {
             throw new Revert('Airdrop: redeemed');
         }
 
@@ -238,6 +242,8 @@ export class AirdropContract extends OP_NET {
         const raw: u256 = this.allocationsPill.get(publicKey);
         if (raw.isZero()) return;
 
+        this.allocationsPill.delete(publicKey);
+
         const amount: u256 = SafeMath.mul(raw, PILL_SCALE);
         TransferHelper.transfer(this.PILL_ADDRESS, Blockchain.tx.origin, amount);
     }
@@ -246,7 +252,20 @@ export class AirdropContract extends OP_NET {
         const raw: u256 = this.allocationsMoto.get(publicKey);
         if (raw.isZero()) return;
 
+        const currentBalance = this.queryBalance(this.MOTO_ADDRESS);
+        if (currentBalance.isZero()) {
+            throw new Revert('Airdrop: distributeMoto empty');
+        }
+
+        this.allocationsMoto.delete(publicKey);
+
         const amount: u256 = SafeMath.mul(raw, MOTO_SCALE);
+        if (amount > currentBalance) {
+            throw new Revert(
+                `Airdrop: distributeMoto insufficient balance ${amount} > ${currentBalance}`,
+            );
+        }
+
         TransferHelper.transfer(this.MOTO_ADDRESS, Blockchain.tx.origin, amount);
     }
 }
