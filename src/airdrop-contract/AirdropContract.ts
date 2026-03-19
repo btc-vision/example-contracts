@@ -64,12 +64,15 @@ export class AirdropContract extends OP_NET {
     public override onDeployment(calldata: Calldata): void {
         const delayBlocks: u64 = calldata.readU64();
         const durationBlocks: u64 = calldata.readU64();
+        const durationBlocksPill: u64 = calldata.readU64();
 
         const open: u64 = Blockchain.block.number + delayBlocks;
-        const close: u64 = open + durationBlocks;
+        const closeMoto: u64 = open + durationBlocks;
+        const closePill: u64 = open + durationBlocksPill;
 
         this.blockData.set(0, open);
-        this.blockData.set(1, close);
+        this.blockData.set(1, closeMoto);
+        this.blockData.set(2, closePill);
 
         this.blockData.save();
     }
@@ -86,10 +89,11 @@ export class AirdropContract extends OP_NET {
         }
 
         const open: u64 = this.blockData.get(0);
-        const close: u64 = this.blockData.get(1);
+        const closeMoto: u64 = this.blockData.get(1);
+        const closePill: u64 = this.blockData.get(2);
         const current: u64 = Blockchain.block.number;
 
-        if (current < open || current > close) {
+        if (current < open || current > closeMoto) {
             throw new Revert('Airdrop: not active');
         }
 
@@ -107,7 +111,7 @@ export class AirdropContract extends OP_NET {
             throw new Revert('Airdrop: no allocation');
         }
 
-        if (allocationPill) {
+        if (allocationPill && current <= closePill) {
             this.distributePill(publicKey);
         }
 
