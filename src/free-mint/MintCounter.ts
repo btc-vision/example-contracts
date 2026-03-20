@@ -91,7 +91,7 @@ export class MintCounter extends OP_NET {
         const newTotal: u256 = SafeMath.add(this._totalMints.value, u256.One);
         this._totalMints.value = newTotal;
 
-        this.emitEvent(new MintCounterEvent(sender, newUserMints.toU64(), newTotal.toU64()));
+        this.emitEvent(new MintCounterEvent(sender, 1, newUserMints.toU64(), newTotal.toU64()));
 
         const writer: BytesWriter = new BytesWriter(1);
         writer.writeBoolean(true);
