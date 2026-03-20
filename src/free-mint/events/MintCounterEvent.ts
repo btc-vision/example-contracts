@@ -2,10 +2,11 @@ import { Address, ADDRESS_BYTE_LENGTH, BytesWriter, NetEvent, U64_BYTE_LENGTH, }
 
 @final
 export class MintCounterEvent extends NetEvent {
-    constructor(user: Address, userMints: u64, total: u64) {
+    constructor(user: Address, quantity: u64, userMints: u64, total: u64) {
         const eventData: BytesWriter = new BytesWriter(ADDRESS_BYTE_LENGTH + U64_BYTE_LENGTH * 2);
 
         eventData.writeAddress(user);
+        eventData.writeU64(quantity);
         eventData.writeU64(userMints);
         eventData.writeU64(total);
 
