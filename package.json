@@ -12,6 +12,7 @@
         "build:mint": "asc src/free-mint/index.ts --target mint --measure --uncheckedBehavior never",
         "build:registry": "asc src/registry/index.ts --target registry --measure --uncheckedBehavior never",
         "build:btc-resolver": "asc src/btc-resolver/index.ts --target btc-resolver --measure --uncheckedBehavior never",
+        "build:airdrop": "asc src/airdrop-contract/index.ts --target airdrop --measure --uncheckedBehavior never",
         "test": "asp --config as-pect.config.js --verbose --no-logo",
         "test:ci": "asp --config as-pect.config.js --summary --no-logo"
     },

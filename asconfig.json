@@ -28,6 +28,10 @@
             "outFile": "build/PackageRegistry.wasm",
             "use": ["abort=src/registry/index/abort"]
         },
+        "airdrop": {
+            "outFile": "build/AirdropContract.wasm",
+            "use": ["abort=src/airdrop-contract/index/abort"]
+        },
         "btc-resolver": {
             "initialMemory": 4,
             "outFile": "build/Resolver.wasm",
