@@ -115,9 +115,9 @@ export class MintCounter extends OP_NET {
             throw new Revert('Quantity must be > 0');
         }
 
-        const maxBatch: u256 = u256.fromU32(100);
+        const maxBatch: u256 = u256.fromU32(2);
         if (quantity > maxBatch) {
-            throw new Revert('Max 100 mints per batch');
+            throw new Revert('Max 2 mints per batch');
         }
 
         const quantityU64: u64 = quantity.toU64();
