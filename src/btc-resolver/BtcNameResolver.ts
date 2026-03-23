@@ -20,8 +20,8 @@ import {
     Calldata,
     ExtendedAddress,
     ON_OP20_RECEIVED_SELECTOR,
-    OP_NET,
     OP20Utils,
+    OP_NET,
     Revert,
     SafeMath,
     StoredString,
@@ -34,9 +34,9 @@ import { StoredMapU256 } from '@btc-vision/btc-runtime/runtime/storage/maps/Stor
 import { AdvancedStoredString } from '@btc-vision/btc-runtime/runtime/storage/AdvancedStoredString';
 
 import {
-    ContractUpdatedEvent,
     ContenthashChangedEvent,
     ContenthashClearedEvent,
+    ContractUpdatedEvent,
     DomainPriceChangedEvent,
     DomainRegisteredEvent,
     DomainRenewedEvent,
@@ -409,7 +409,11 @@ export class BtcNameResolver extends OP_NET {
             // Skip invalid entries
             if (years < 1 || years > MAX_REGISTRATION_YEARS) continue;
             if (owner.equals(Address.zero())) continue;
-            if (<u32>domainName.length < MIN_DOMAIN_LENGTH || <u32>domainName.length > MAX_DOMAIN_LENGTH) continue;
+            if (
+                <u32>domainName.length < MIN_DOMAIN_LENGTH ||
+                <u32>domainName.length > MAX_DOMAIN_LENGTH
+            )
+                continue;
 
             const domainKey = this.getDomainKeyU256(domainName);
 
@@ -665,7 +669,12 @@ export class BtcNameResolver extends OP_NET {
         }
 
         // Calculate MOTO price
-        const totalMotoPrice = this.calculateMotoRegistrationPrice(domainName, domainKey, blockNumber, years);
+        const totalMotoPrice = this.calculateMotoRegistrationPrice(
+            domainName,
+            domainKey,
+            blockNumber,
+            years,
+        );
         this.collectMotoPayment(totalMotoPrice);
 
         // Register domain
@@ -789,7 +798,10 @@ export class BtcNameResolver extends OP_NET {
         // Check no active reservation exists (or it expired)
         const existingReservationBlock = this.domainReservationBlock.get(domainKey).toU64();
         if (existingReservationBlock > 0) {
-            const reservationExpiry = SafeMath.add64(existingReservationBlock, RESERVATION_TIMEOUT_BLOCKS);
+            const reservationExpiry = SafeMath.add64(
+                existingReservationBlock,
+                RESERVATION_TIMEOUT_BLOCKS,
+            );
             if (blockNumber <= reservationExpiry) {
                 throw new Revert('Domain is already reserved');
             }
@@ -864,13 +876,11 @@ export class BtcNameResolver extends OP_NET {
         // Calculate price and deduct reservation fee
         const basePrice = this.domainPriceSats.get(u256.Zero).toU64();
         const auctionPrice = this.calculateAuctionPrice(domainName, domainKey, blockNumber);
-        const totalPrice = SafeMath.add64(
-            auctionPrice,
-            SafeMath.mul64(basePrice, years - 1),
-        );
-        const remainingPrice = totalPrice > RESERVATION_FEE_SATS
-            ? SafeMath.sub64(totalPrice, RESERVATION_FEE_SATS)
-            : <u64>0;
+        const totalPrice = SafeMath.add64(auctionPrice, SafeMath.mul64(basePrice, years - 1));
+        const remainingPrice =
+            totalPrice > RESERVATION_FEE_SATS
+                ? SafeMath.sub64(totalPrice, RESERVATION_FEE_SATS)
+                : <u64>0;
 
         if (remainingPrice > 0) {
             this.verifyPayment(remainingPrice);
@@ -1199,7 +1209,11 @@ export class BtcNameResolver extends OP_NET {
         // Build message hash for signature verification
         // Structure: sha256(contractAddress + domainKey + newOwner + deadline + nonce)
         const messageData = new BytesWriter(
-            ADDRESS_BYTE_LENGTH + U256_BYTE_LENGTH + ADDRESS_BYTE_LENGTH + U64_BYTE_LENGTH + U256_BYTE_LENGTH,
+            ADDRESS_BYTE_LENGTH +
+                U256_BYTE_LENGTH +
+                ADDRESS_BYTE_LENGTH +
+                U64_BYTE_LENGTH +
+                U256_BYTE_LENGTH,
         );
         messageData.writeAddress(Blockchain.contractAddress);
         messageData.writeU256(domainKey);
@@ -1567,7 +1581,8 @@ export class BtcNameResolver extends OP_NET {
         // Active = not expired yet
         const isActive = exists && blockNumber <= expiresAt;
         // In grace = expired but within grace window
-        const inGracePeriod = exists && !isActive && blockNumber <= SafeMath.add64(expiresAt, GRACE_PERIOD_BLOCKS);
+        const inGracePeriod =
+            exists && !isActive && blockNumber <= SafeMath.add64(expiresAt, GRACE_PERIOD_BLOCKS);
 
         const response = new BytesWriter(1 + 32 + 8 + 8 + 8 + 1 + 1);
         response.writeBoolean(exists);
@@ -1760,10 +1775,7 @@ export class BtcNameResolver extends OP_NET {
         if (years < 1 || years > MAX_REGISTRATION_YEARS) {
             throw new Revert('Years must be 1-10');
         }
-        const totalPrice = SafeMath.add64(
-            auctionPrice,
-            SafeMath.mul64(basePrice, years - 1),
-        );
+        const totalPrice = SafeMath.add64(auctionPrice, SafeMath.mul64(basePrice, years - 1));
 
         const response = new BytesWriter(8 + 8 + 8);
         response.writeU64(totalPrice);
@@ -1817,7 +1829,8 @@ export class BtcNameResolver extends OP_NET {
         const reserver = this._u256ToAddress(this.domainReservationOwner.get(domainKey));
         const reservedAt = this.domainReservationBlock.get(domainKey).toU64();
         const years = this.domainReservationYears.get(domainKey).toU64();
-        const isActive = reservedAt > 0 && blockNumber <= SafeMath.add64(reservedAt, RESERVATION_TIMEOUT_BLOCKS);
+        const isActive =
+            reservedAt > 0 && blockNumber <= SafeMath.add64(reservedAt, RESERVATION_TIMEOUT_BLOCKS);
 
         const response = new BytesWriter(32 + 8 + 8 + 1);
         response.writeAddress(reserver);
