@@ -125,6 +125,8 @@ const domainReservationBlockPointer: u16 = Blockchain.nextPointer;
 const domainReservationYearsPointer: u16 = Blockchain.nextPointer;
 
 // Domain nonce (for signature replay protection)
+const domainGenerationPointer: u16 = Blockchain.nextPointer;
+const subdomainGenerationPointer: u16 = Blockchain.nextPointer;
 const domainNoncePointer: u16 = Blockchain.nextPointer;
 
 // MOTO OP20 payment storage
@@ -182,6 +184,8 @@ export class BtcNameResolver extends OP_NET {
     // -------------------------------------------------------------------------
     // Domain Nonce (signature replay protection)
     // -------------------------------------------------------------------------
+    private readonly domainGeneration: StoredMapU256;
+    private readonly subdomainGeneration: StoredMapU256;
     private readonly domainNonce: StoredMapU256;
 
     // -------------------------------------------------------------------------
@@ -229,6 +233,8 @@ export class BtcNameResolver extends OP_NET {
         this.domainReservationYears = new StoredMapU256(domainReservationYearsPointer);
 
         // Initialize nonce storage
+        this.domainGeneration = new StoredMapU256(domainGenerationPointer);
+        this.subdomainGeneration = new StoredMapU256(subdomainGenerationPointer);
         this.domainNonce = new StoredMapU256(domainNoncePointer);
 
         // Initialize MOTO payment storage
@@ -382,6 +388,7 @@ export class BtcNameResolver extends OP_NET {
         this.domainAuctionStart.set(domainKey, u256.Zero);
         this.contenthashType.set(domainKey, u256.Zero);
         this.contenthashData.set(domainKey, u256.Zero);
+        this.domainGeneration.set(domainKey, SafeMath.add(this.domainGeneration.get(domainKey), u256.One));
 
         this.emitEvent(new DomainRegisteredEvent(domainKey, owner, blockNumber));
 
@@ -406,13 +413,9 @@ export class BtcNameResolver extends OP_NET {
             const years = calldata.readU64();
             const owner = calldata.readAddress();
 
-            // Skip invalid entries
             if (years < 1 || years > MAX_REGISTRATION_YEARS) continue;
             if (owner.equals(Address.zero())) continue;
-            if (
-                <u32>domainName.length < MIN_DOMAIN_LENGTH ||
-                <u32>domainName.length > MAX_DOMAIN_LENGTH
-            )
+            if (!this.isValidDomainName(domainName))
                 continue;
 
             const domainKey = this.getDomainKeyU256(domainName);
@@ -437,6 +440,7 @@ export class BtcNameResolver extends OP_NET {
             this.domainAuctionStart.set(domainKey, u256.Zero);
             this.contenthashType.set(domainKey, u256.Zero);
             this.contenthashData.set(domainKey, u256.Zero);
+            this.domainGeneration.set(domainKey, SafeMath.add(this.domainGeneration.get(domainKey), u256.One));
 
             this.emitEvent(new DomainRegisteredEvent(domainKey, owner, blockNumber));
             minted++;
@@ -897,9 +901,9 @@ export class BtcNameResolver extends OP_NET {
         this.domainExpiry.set(domainKey, u256.fromU64(expiryBlock));
         this.domainAuctionStart.set(domainKey, u256.Zero);
 
-        // Clear stale contenthash from previous owner
         this.contenthashType.set(domainKey, u256.Zero);
         this.contenthashData.set(domainKey, u256.Zero);
+        this.domainGeneration.set(domainKey, SafeMath.add(this.domainGeneration.get(domainKey), u256.One));
 
         // Clear reservation
         this.domainReservationOwner.set(domainKey, u256.Zero);
@@ -1206,15 +1210,16 @@ export class BtcNameResolver extends OP_NET {
         // Get current nonce for replay protection
         const nonce = this.domainNonce.get(domainKey);
 
-        // Build message hash for signature verification
-        // Structure: sha256(contractAddress + domainKey + newOwner + deadline + nonce)
+        const methodId = Uint8Array.wrap(String.UTF8.encode('transferDomain'));
         const messageData = new BytesWriter(
-            ADDRESS_BYTE_LENGTH +
+            methodId.length +
+                ADDRESS_BYTE_LENGTH +
                 U256_BYTE_LENGTH +
                 ADDRESS_BYTE_LENGTH +
                 U64_BYTE_LENGTH +
                 U256_BYTE_LENGTH,
         );
+        messageData.writeBytes(methodId);
         messageData.writeAddress(Blockchain.contractAddress);
         messageData.writeU256(domainKey);
         messageData.writeAddress(newOwner);
@@ -1303,6 +1308,7 @@ export class BtcNameResolver extends OP_NET {
         this.subdomainOwner.set(subdomainKey, this._addressToU256(owner));
         this.subdomainParent.set(subdomainKey, parentKey);
         this.subdomainTTL.set(subdomainKey, u256.fromU64(DEFAULT_TTL));
+        this.subdomainGeneration.set(subdomainKey, this.domainGeneration.get(parentKey));
 
         this.emitEvent(new SubdomainCreatedEvent(parentKey, subdomainKey, owner, blockNumber));
 
@@ -1681,12 +1687,13 @@ export class BtcNameResolver extends OP_NET {
             if (this.subdomainExists.get(nameKey).isZero()) {
                 owner = Address.zero();
             } else {
-                // Check if parent domain is still active
                 const parentName = this.getParentDomain(name);
                 const parentKey = this.getDomainKeyU256(parentName);
                 const parentExpiry = this.domainExpiry.get(parentKey).toU64();
                 const parentGraceEnd = SafeMath.add64(parentExpiry, GRACE_PERIOD_BLOCKS);
-                if (blockNumber > parentGraceEnd) {
+                const currentGen = this.domainGeneration.get(parentKey);
+                const subGen = this.subdomainGeneration.get(nameKey);
+                if (blockNumber > parentGraceEnd || currentGen != subGen) {
                     owner = Address.zero();
                 } else {
                     owner = this._u256ToAddress(this.subdomainOwner.get(nameKey));
@@ -1918,38 +1925,49 @@ export class BtcNameResolver extends OP_NET {
         return result;
     }
 
+    private isValidDomainName(domain: string): boolean {
+        const len = domain.length;
+        if (len < <i32>MIN_DOMAIN_LENGTH || len > <i32>MAX_DOMAIN_LENGTH) return false;
+        if (!this.isAlphanumeric(domain.charCodeAt(0))) return false;
+        if (!this.isAlphanumeric(domain.charCodeAt(len - 1))) return false;
+        for (let i = 0; i < len; i++) {
+            const c = domain.charCodeAt(i);
+            if (!((c >= 97 && c <= 122) || (c >= 65 && c <= 90) || (c >= 48 && c <= 57) || c == 45)) return false;
+        }
+        for (let i = 0; i < len - 1; i++) {
+            if (domain.charCodeAt(i) == 45 && domain.charCodeAt(i + 1) == 45) return false;
+        }
+        return true;
+    }
+
     private validateDomainName(domain: string): void {
         const len = domain.length;
         if (len < <i32>MIN_DOMAIN_LENGTH || len > <i32>MAX_DOMAIN_LENGTH) {
             throw new Revert('Domain must be 1-63 characters');
         }
 
-        // Must start with alphanumeric
         const first = domain.charCodeAt(0);
         if (!this.isAlphanumeric(first)) {
             throw new Revert('Domain must start with alphanumeric');
         }
 
-        // Must end with alphanumeric
         const last = domain.charCodeAt(len - 1);
         if (!this.isAlphanumeric(last)) {
             throw new Revert('Domain must end with alphanumeric');
         }
 
-        // Only lowercase letters, digits, and hyphens allowed
         for (let i = 0; i < len; i++) {
             const c = domain.charCodeAt(i);
-            const isLower = c >= 97 && c <= 122; // a-z
-            const isUpper = c >= 65 && c <= 90; // A-Z (will be lowercased)
-            const isDigit = c >= 48 && c <= 57; // 0-9
-            const isHyphen = c == 45; // -
+            const isLower = c >= 97 && c <= 122;
+            const isUpper = c >= 65 && c <= 90;
+            const isDigit = c >= 48 && c <= 57;
+            const isHyphen = c == 45;
 
             if (!isLower && !isUpper && !isDigit && !isHyphen) {
                 throw new Revert('Invalid character in domain');
             }
         }
 
-        // No consecutive hyphens
         for (let i = 0; i < len - 1; i++) {
             if (domain.charCodeAt(i) == 45 && domain.charCodeAt(i + 1) == 45) {
                 throw new Revert('No consecutive hyphens allowed');
@@ -2264,13 +2282,17 @@ export class BtcNameResolver extends OP_NET {
             if (this.subdomainExists.get(nameKey).isZero()) {
                 throw new Revert('Subdomain does not exist');
             }
-            // Check parent domain is still active
             const parentName = this.getParentDomain(name);
             const parentKey = this.getDomainKeyU256(parentName);
             const parentExpiry = this.domainExpiry.get(parentKey).toU64();
             const parentGraceEnd = SafeMath.add64(parentExpiry, GRACE_PERIOD_BLOCKS);
             if (Blockchain.block.number > parentGraceEnd) {
                 throw new Revert('Parent domain expired');
+            }
+            const currentGen = this.domainGeneration.get(parentKey);
+            const subGen = this.subdomainGeneration.get(nameKey);
+            if (currentGen != subGen) {
+                throw new Revert('Subdomain invalidated by re-registration');
             }
             const owner = this._u256ToAddress(this.subdomainOwner.get(nameKey));
             if (!Blockchain.tx.sender.equals(owner)) {
