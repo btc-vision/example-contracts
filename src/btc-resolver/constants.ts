@@ -78,11 +78,11 @@ export const MAX_REGISTRATION_YEARS: u64 = 10;
 export const RESERVATION_FEE_SATS: u64 = 2_000;
 
 /** Blocks before an uncompleted reservation expires */
-export const RESERVATION_TIMEOUT_BLOCKS: u64 = 5;
+export const RESERVATION_TIMEOUT_BLOCKS: u64 = 10;
 
 /** Hardcoded Bitcoin address for reservation fees */
-// TODO: Replace with actual address before deployment
-export const RESERVATION_FEE_ADDRESS: string = 'bc1p_REPLACE_ME_WITH_ACTUAL_ADDRESS';
+export const RESERVATION_FEE_ADDRESS: string =
+    'opt1pgsp6n0e8ur75qc78hnx6af6kvegwgjmaukrl32f354svltrt8zrsn2ue92';
 
 // =============================================================================
 // Pricing Tiers (in satoshis) - 1 BTC = 100,000,000 sats
