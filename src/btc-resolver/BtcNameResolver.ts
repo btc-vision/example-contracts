@@ -138,6 +138,11 @@ const motoTierPricesPointer: u16 = Blockchain.nextPointer;
 const motoBasePricePointer: u16 = Blockchain.nextPointer;
 const motoEnabledPointer: u16 = Blockchain.nextPointer;
 
+// Owner domain index (enumerable: get all domains by owner)
+const ownerDomainCountPointer: u16 = Blockchain.nextPointer;
+const ownerDomainAtIndexPointer: u16 = Blockchain.nextPointer;
+const domainIndexInOwnerListPointer: u16 = Blockchain.nextPointer;
+
 // =============================================================================
 // Contract Implementation
 // =============================================================================
@@ -202,6 +207,13 @@ export class BtcNameResolver extends OP_NET {
     private readonly motoEnabled: StoredMapU256;
 
     // -------------------------------------------------------------------------
+    // Owner Domain Index (Enumerable)
+    // -------------------------------------------------------------------------
+    private readonly ownerDomainCount: StoredMapU256;
+    private readonly ownerDomainAtIndex: StoredMapU256;
+    private readonly domainIndexInOwnerList: StoredMapU256;
+
+    // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
     public constructor() {
@@ -249,6 +261,11 @@ export class BtcNameResolver extends OP_NET {
         this.motoTierPrices = new StoredMapU256(motoTierPricesPointer);
         this.motoBasePrice = new StoredMapU256(motoBasePricePointer);
         this.motoEnabled = new StoredMapU256(motoEnabledPointer);
+
+        // Initialize owner domain index
+        this.ownerDomainCount = new StoredMapU256(ownerDomainCountPointer);
+        this.ownerDomainAtIndex = new StoredMapU256(ownerDomainAtIndexPointer);
+        this.domainIndexInOwnerList = new StoredMapU256(domainIndexInOwnerListPointer);
     }
 
     // -------------------------------------------------------------------------
@@ -286,6 +303,8 @@ export class BtcNameResolver extends OP_NET {
         this.domainCreated.set(opnetDomainKey, u256.fromU64(blockNumber));
         this.domainTTL.set(opnetDomainKey, u256.fromU64(DEFAULT_TTL));
         this.domainExpiry.set(opnetDomainKey, u256.fromU64(u64.MAX_VALUE - GRACE_PERIOD_BLOCKS));
+
+        this._addDomainToOwner(this._addressToU256(deployer), opnetDomainKey);
 
         this.emitEvent(new DomainRegisteredEvent(opnetDomainKey, deployer, blockNumber));
     }
@@ -383,12 +402,14 @@ export class BtcNameResolver extends OP_NET {
             }
             this.domainPendingOwner.set(domainKey, u256.Zero);
             this.domainPendingTimestamp.set(domainKey, u256.Zero);
+            this._removeDomainFromOwner(this.domainOwner.get(domainKey), domainKey);
         }
 
         const expiryBlock = SafeMath.add64(blockNumber, SafeMath.mul64(BLOCKS_PER_YEAR, years));
+        const ownerU256 = this._addressToU256(owner);
 
         this.domainExists.set(domainKey, u256.One);
-        this.domainOwner.set(domainKey, this._addressToU256(owner));
+        this.domainOwner.set(domainKey, ownerU256);
         this.domainCreated.set(domainKey, u256.fromU64(blockNumber));
         this.domainTTL.set(domainKey, u256.fromU64(DEFAULT_TTL));
         this.domainExpiry.set(domainKey, u256.fromU64(expiryBlock));
@@ -401,6 +422,8 @@ export class BtcNameResolver extends OP_NET {
         );
         this.domainPaidPriceSats.set(domainKey, u256.fromU64(this.getPremiumTierPrice(domainName)));
         this.domainPaidPriceMoto.set(domainKey, u256.Zero);
+
+        this._addDomainToOwner(ownerU256, domainKey);
 
         this.emitEvent(new DomainRegisteredEvent(domainKey, owner, blockNumber));
 
@@ -439,12 +462,14 @@ export class BtcNameResolver extends OP_NET {
                 if (blockNumber <= graceEnd) continue;
                 this.domainPendingOwner.set(domainKey, u256.Zero);
                 this.domainPendingTimestamp.set(domainKey, u256.Zero);
+                this._removeDomainFromOwner(this.domainOwner.get(domainKey), domainKey);
             }
 
             const expiryBlock = SafeMath.add64(blockNumber, SafeMath.mul64(BLOCKS_PER_YEAR, years));
+            const ownerU256 = this._addressToU256(owner);
 
             this.domainExists.set(domainKey, u256.One);
-            this.domainOwner.set(domainKey, this._addressToU256(owner));
+            this.domainOwner.set(domainKey, ownerU256);
             this.domainCreated.set(domainKey, u256.fromU64(blockNumber));
             this.domainTTL.set(domainKey, u256.fromU64(DEFAULT_TTL));
             this.domainExpiry.set(domainKey, u256.fromU64(expiryBlock));
@@ -460,6 +485,8 @@ export class BtcNameResolver extends OP_NET {
                 u256.fromU64(this.getPremiumTierPrice(domainName)),
             );
             this.domainPaidPriceMoto.set(domainKey, u256.Zero);
+
+            this._addDomainToOwner(ownerU256, domainKey);
 
             this.emitEvent(new DomainRegisteredEvent(domainKey, owner, blockNumber));
             minted++;
@@ -689,6 +716,7 @@ export class BtcNameResolver extends OP_NET {
             }
             this.domainPendingOwner.set(domainKey, u256.Zero);
             this.domainPendingTimestamp.set(domainKey, u256.Zero);
+            this._removeDomainFromOwner(this.domainOwner.get(domainKey), domainKey);
         }
 
         const motoBase = this.motoBasePrice.get(u256.Zero);
@@ -717,10 +745,11 @@ export class BtcNameResolver extends OP_NET {
 
         // Register domain
         const sender = Blockchain.tx.sender;
+        const senderU256 = this._addressToU256(sender);
         const expiryBlock = SafeMath.add64(blockNumber, SafeMath.mul64(BLOCKS_PER_YEAR, years));
 
         this.domainExists.set(domainKey, u256.One);
-        this.domainOwner.set(domainKey, this._addressToU256(sender));
+        this.domainOwner.set(domainKey, senderU256);
         this.domainCreated.set(domainKey, u256.fromU64(blockNumber));
         this.domainTTL.set(domainKey, u256.fromU64(DEFAULT_TTL));
         this.domainExpiry.set(domainKey, u256.fromU64(expiryBlock));
@@ -736,6 +765,8 @@ export class BtcNameResolver extends OP_NET {
         );
         this.domainPaidPriceSats.set(domainKey, u256.Zero);
         this.domainPaidPriceMoto.set(domainKey, motoAuctionPrice);
+
+        this._addDomainToOwner(senderU256, domainKey);
 
         this.emitEvent(new DomainRegisteredEvent(domainKey, sender, blockNumber));
 
@@ -921,6 +952,7 @@ export class BtcNameResolver extends OP_NET {
             }
             this.domainPendingOwner.set(domainKey, u256.Zero);
             this.domainPendingTimestamp.set(domainKey, u256.Zero);
+            this._removeDomainFromOwner(this.domainOwner.get(domainKey), domainKey);
         }
 
         const basePrice = this.domainPriceSats.get(u256.Zero).toU64();
@@ -944,10 +976,11 @@ export class BtcNameResolver extends OP_NET {
 
         // Register domain
         const sender = Blockchain.tx.sender;
+        const senderU256 = this._addressToU256(sender);
         const expiryBlock = SafeMath.add64(blockNumber, SafeMath.mul64(BLOCKS_PER_YEAR, years));
 
         this.domainExists.set(domainKey, u256.One);
-        this.domainOwner.set(domainKey, this._addressToU256(sender));
+        this.domainOwner.set(domainKey, senderU256);
         this.domainCreated.set(domainKey, u256.fromU64(blockNumber));
         this.domainTTL.set(domainKey, u256.fromU64(DEFAULT_TTL));
         this.domainExpiry.set(domainKey, u256.fromU64(expiryBlock));
@@ -961,6 +994,8 @@ export class BtcNameResolver extends OP_NET {
         );
         this.domainPaidPriceSats.set(domainKey, u256.fromU64(auctionPrice));
         this.domainPaidPriceMoto.set(domainKey, u256.Zero);
+
+        this._addDomainToOwner(senderU256, domainKey);
 
         // Clear reservation
         this.domainReservationOwner.set(domainKey, u256.Zero);
@@ -1110,12 +1145,17 @@ export class BtcNameResolver extends OP_NET {
         }
 
         // Complete transfer
-        const previousOwner = this._u256ToAddress(this.domainOwner.get(domainKey));
+        const previousOwnerU256 = this.domainOwner.get(domainKey);
+        const previousOwner = this._u256ToAddress(previousOwnerU256);
+        const pendingOwnerU256 = this._addressToU256(pendingOwner);
         const blockNumber = Blockchain.block.number;
 
-        this.domainOwner.set(domainKey, this._addressToU256(pendingOwner));
+        this.domainOwner.set(domainKey, pendingOwnerU256);
         this.domainPendingOwner.set(domainKey, u256.Zero);
         this.domainPendingTimestamp.set(domainKey, u256.Zero);
+
+        this._removeDomainFromOwner(previousOwnerU256, domainKey);
+        this._addDomainToOwner(pendingOwnerU256, domainKey);
 
         this.emitEvent(
             new DomainTransferCompletedEvent(domainKey, previousOwner, pendingOwner, blockNumber),
@@ -1185,7 +1225,9 @@ export class BtcNameResolver extends OP_NET {
         }
 
         // Get current owner for event
-        const previousOwner = this._u256ToAddress(this.domainOwner.get(domainKey));
+        const previousOwnerU256 = this.domainOwner.get(domainKey);
+        const previousOwner = this._u256ToAddress(previousOwnerU256);
+        const newOwnerU256 = this._addressToU256(newOwner);
         const blockNumber = Blockchain.block.number;
 
         // Clear any pending transfer
@@ -1193,7 +1235,10 @@ export class BtcNameResolver extends OP_NET {
         this.domainPendingTimestamp.set(domainKey, u256.Zero);
 
         // Transfer ownership
-        this.domainOwner.set(domainKey, this._addressToU256(newOwner));
+        this.domainOwner.set(domainKey, newOwnerU256);
+
+        this._removeDomainFromOwner(previousOwnerU256, domainKey);
+        this._addDomainToOwner(newOwnerU256, domainKey);
 
         this.emitEvent(
             new DomainTransferCompletedEvent(domainKey, previousOwner, newOwner, blockNumber),
@@ -1306,7 +1351,12 @@ export class BtcNameResolver extends OP_NET {
         this.domainPendingTimestamp.set(domainKey, u256.Zero);
 
         // Transfer ownership
-        this.domainOwner.set(domainKey, this._addressToU256(newOwner));
+        const storedOwnerU256 = this._addressToU256(storedOwner);
+        const newOwnerU256 = this._addressToU256(newOwner);
+        this.domainOwner.set(domainKey, newOwnerU256);
+
+        this._removeDomainFromOwner(storedOwnerU256, domainKey);
+        this._addDomainToOwner(newOwnerU256, domainKey);
 
         this.emitEvent(
             new DomainTransferCompletedEvent(domainKey, storedOwner, newOwner, blockNumber),
@@ -1922,6 +1972,52 @@ export class BtcNameResolver extends OP_NET {
         return response;
     }
 
+    /**
+     * Get all domain keys owned by an address (paginated).
+     * Returns total count and a page of domain keys.
+     */
+    @method(
+        { name: 'owner', type: ABIDataTypes.ADDRESS },
+        { name: 'offset', type: ABIDataTypes.UINT64 },
+        { name: 'limit', type: ABIDataTypes.UINT64 },
+    )
+    @returns(
+        { name: 'total', type: ABIDataTypes.UINT64 },
+        { name: 'keys', type: ABIDataTypes.ARRAY_OF_BYTES },
+    )
+    public getDomainsByOwner(calldata: Calldata): BytesWriter {
+        const owner = calldata.readAddress();
+        const offset = calldata.readU64();
+        let limit = calldata.readU64();
+
+        if (limit > 50) limit = 50;
+
+        const ownerU256 = this._addressToU256(owner);
+        const total = this.ownerDomainCount.get(ownerU256).toU64();
+
+        if (offset >= total || limit == 0) {
+            const response = new BytesWriter(10);
+            response.writeU64(total);
+            response.writeU16(0);
+            return response;
+        }
+
+        const remaining = total - offset;
+        const count: u16 = <u16>(remaining < limit ? remaining : limit);
+
+        const response = new BytesWriter(8 + 2 + <i32>count * 36);
+        response.writeU64(total);
+        response.writeU16(count);
+
+        for (let i: u16 = 0; i < count; i++) {
+            const compositeKey = this._ownerIndexKey(ownerU256, offset + <u64>i);
+            const value = this.ownerDomainAtIndex.get(compositeKey);
+            response.writeBytesWithLength(value.toUint8Array());
+        }
+
+        return response;
+    }
+
     // =========================================================================
     // INTERNAL HELPERS
     // =========================================================================
@@ -1942,6 +2038,48 @@ export class BtcNameResolver extends OP_NET {
         }
         const bytes = val.toUint8Array(true);
         return Address.fromUint8Array(bytes);
+    }
+
+    private _ownerIndexKey(ownerU256: u256, index: u64): u256 {
+        const writer = new BytesWriter(40);
+        writer.writeU256(ownerU256);
+        writer.writeU64(index);
+        return u256.fromUint8ArrayBE(Blockchain.sha256(writer.getBuffer()));
+    }
+
+    private _addDomainToOwner(ownerU256: u256, domainKey: u256): void {
+        // Guard against double-insertion
+        if (!this.domainIndexInOwnerList.get(domainKey).isZero()) return;
+
+        const count = this.ownerDomainCount.get(ownerU256).toU64();
+        const compositeKey = this._ownerIndexKey(ownerU256, count);
+        this.ownerDomainAtIndex.set(compositeKey, domainKey);
+        this.domainIndexInOwnerList.set(domainKey, u256.fromU64(count + 1)); // 1-based (0 = not indexed)
+        this.ownerDomainCount.set(ownerU256, u256.fromU64(count + 1));
+    }
+
+    private _removeDomainFromOwner(ownerU256: u256, domainKey: u256): void {
+        const indexPlusOne = this.domainIndexInOwnerList.get(domainKey).toU64();
+        if (indexPlusOne == 0) return; // Not indexed (pre-upgrade domain)
+
+        const idx = indexPlusOne - 1;
+        const count = this.ownerDomainCount.get(ownerU256).toU64();
+        if (count == 0) return;
+
+        const lastIdx = count - 1;
+        const lastCompositeKey = this._ownerIndexKey(ownerU256, lastIdx);
+
+        if (idx != lastIdx) {
+            // Swap with last element
+            const lastDomainKey = this.ownerDomainAtIndex.get(lastCompositeKey);
+            const idxCompositeKey = this._ownerIndexKey(ownerU256, idx);
+            this.ownerDomainAtIndex.set(idxCompositeKey, lastDomainKey);
+            this.domainIndexInOwnerList.set(lastDomainKey, u256.fromU64(idx + 1));
+        }
+
+        this.ownerDomainAtIndex.set(lastCompositeKey, u256.Zero);
+        this.domainIndexInOwnerList.set(domainKey, u256.Zero);
+        this.ownerDomainCount.set(ownerU256, u256.fromU64(lastIdx));
     }
 
     private getDomainKeyU256(domainName: string): u256 {
