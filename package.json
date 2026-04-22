@@ -38,7 +38,7 @@
         "wbtc"
     ],
     "resolutions": {
-        "@btc-vision/btc-runtime": "^1.11.0-beta.1"
+        "@btc-vision/btc-runtime": "^1.11.1"
     },
     "homepage": "https://opnet.org",
     "type": "module",
