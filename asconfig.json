@@ -4,6 +4,10 @@
             "outFile": "build/MyToken.wasm",
             "use": ["abort=src/token/index/abort"]
         },
+        "wbtc": {
+            "outFile": "build/WBTC.wasm",
+            "use": ["abort=src/wbtc/index/abort"]
+        },
         "stablecoin": {
             "outFile": "build/MyStableCoin.wasm",
             "use": ["abort=src/stablecoin/index/abort"]

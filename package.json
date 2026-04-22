@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "build:token": "asc src/token/index.ts --target token --measure --uncheckedBehavior never",
+        "build:wbtc": "asc src/wbtc/index.ts --target wbtc --measure --uncheckedBehavior never",
         "build:stablecoin": "asc src/stablecoin/index.ts --target stablecoin --measure --uncheckedBehavior never",
         "build:peggedcoin": "asc src/pegged-token/index.ts --target peggedcoin --measure --uncheckedBehavior never",
         "build:oraclecoin": "asc src/multi-oracle-stablecoin/index.ts --target oraclecoin --measure --uncheckedBehavior never",
