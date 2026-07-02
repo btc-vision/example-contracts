@@ -20,13 +20,13 @@
     "author": "BlobMaster41",
     "license": "MIT",
     "devDependencies": {
-        "@btc-vision/as-covers-assembly": "^0.4.4",
-        "@btc-vision/as-covers-transform": "^0.4.4",
-        "@btc-vision/as-pect-assembly": "^8.2.0",
-        "@btc-vision/as-pect-cli": "^8.2.0",
-        "@btc-vision/as-pect-transform": "^8.2.0",
-        "@types/node": "^25.5.0",
-        "prettier": "^3.8.1"
+        "@btc-vision/as-covers-assembly": "^0.4.5",
+        "@btc-vision/as-covers-transform": "^0.4.5",
+        "@btc-vision/as-pect-assembly": "^8.3.0",
+        "@btc-vision/as-pect-cli": "^8.3.0",
+        "@btc-vision/as-pect-transform": "^8.3.0",
+        "@types/node": "^26.1.0",
+        "prettier": "^3.9.4"
     },
     "keywords": [
         "bitcoin",
@@ -48,13 +48,13 @@
         "@btc-vision/as-loader": "^0.0.0",
         "@btc-vision/assemblyscript": "^0.29.3",
         "@btc-vision/bitcoin": "^7.0.0",
-        "@btc-vision/btc-runtime": "^1.11.1",
+        "@btc-vision/btc-runtime": "^1.11.3",
         "@btc-vision/opnet-transform": "^1.2.2",
         "@eslint/js": "^10.0.1",
-        "eslint": "^10.1.0",
+        "eslint": "^10.6.0",
         "gulplog": "^2.2.0",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.3",
-        "typescript-eslint": "^8.57.2"
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.62.1"
     }
 }
