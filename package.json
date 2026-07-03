@@ -48,7 +48,7 @@
         "@btc-vision/as-loader": "^0.0.0",
         "@btc-vision/assemblyscript": "^0.29.3",
         "@btc-vision/bitcoin": "^7.0.0",
-        "@btc-vision/btc-runtime": "^1.11.3",
+        "@btc-vision/btc-runtime": "^1.11.4",
         "@btc-vision/opnet-transform": "^1.2.2",
         "@eslint/js": "^10.0.1",
         "eslint": "^10.6.0",
